@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Write;
 use std::collections::HashMap;
 //use std::collections::HashSet;
 //use std::hash::Hash;
@@ -37,26 +38,58 @@ enum Action {
     Set(String, Record),
 }
 
+fn prompt_user(prompt: &String) -> String {
+    print!("{}", prompt);
+    io::stdout().flush().ok().expect("Could not flush stdout");
+    let mut user_input = String::new();
+    io::stdin().read_line(&mut user_input).expect("failed to read stdin");
+    user_input.trim().to_string()
+}
+
 
 fn main() {
     let mut db: HashMap<String, Record> = HashMap::new();
+    let prompt = String::from("> ");
 
     loop {
-        let mut user_input = String::new();
-        io::stdin().read_line(&mut user_input).expect("failed to read stdin");
+        let user_input = prompt_user(&prompt);
+
+        if user_input == "q" {
+            break;
+        }
+
         let input_vec: Vec<_> = user_input
             .split_whitespace()
             .map(|s| s.trim().to_lowercase())
             .collect::<Vec<_>>();
 
+        let length = input_vec.len();
+
+        if length == 0 {
+            continue;
+        }
         let command = &input_vec[0];
         let params = &input_vec[1..];
 
         // parse action
         let action = match command.as_ref() {
-            "get" => Action::Get(params[0].to_string()),
-            "set" => Action::Set(params[0].to_string(),
-                                 make_record(&params[1].to_string())),
+            "get" => 
+                if length == 2 {
+                    Action::Get(params[0].to_string())
+                } else {
+                    println!("expecting: get <key>");
+                    continue;
+                },
+
+            "set" => 
+                if length == 3 {
+                    Action::Set(params[0].to_string(),
+                                make_record(&params[1].to_string()))
+                } else {
+                    println!("expecting: set <key> <value>");
+                    continue;
+                }
+
             _ => {
                 println!("invalid command {}", command);
                 continue;
@@ -74,7 +107,7 @@ fn main() {
 
         // print result
         match result {
-            None => println!("None"),
+            None => continue,
             Some(item) => match item {
                 Record::Str(s) => println!("{}", s),
                 _ => println!("Not implemented"),
