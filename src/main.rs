@@ -73,7 +73,7 @@ fn main() {
 
         // parse action
         let action = match command.as_ref() {
-            "get" => 
+            "get" =>
                 if length == 2 {
                     Action::Get(params[0].to_string())
                 } else {
@@ -81,7 +81,7 @@ fn main() {
                     continue;
                 },
 
-            "set" => 
+            "set" =>
                 if length == 3 {
                     Action::Set(params[0].to_string(),
                                 make_record(&params[1].to_string()))
