@@ -1,3 +1,4 @@
+use std::io;
 use std::collections::HashMap;
 //use std::collections::HashSet;
 //use std::hash::Hash;
@@ -5,7 +6,6 @@ use std::collections::HashMap;
 
 #[derive(Eq, PartialEq, Debug, Hash)]
 enum Record {
-    Int(i32),
     Str(String),
     List(Vec<Record>),
     //Set(HashSet<Record>),
@@ -26,19 +26,59 @@ fn get(data: &HashMap<String, Record>, key: String) -> Option<&Record> {
 }
 
 
-fn main() {
-    let v = Record::List(vec![Record::Int(3),
-                              Record::Str("Hello world!".to_string()),
-                              Record::List(vec![Record::Int(1),
-                                                Record::Int(2)]),
-                             ]);
-    let r1 = Record::Int(32);
-    let r2 = Record::Int(32);
-    let r3 = Record::Int(5);
-    let r4 = Record::Str("is this right?".to_string());
-    println!("Hello, world! {:?}", v);
+fn make_record(item: &String) -> Record {
+    Record::Str(item.to_string())
+}
 
-    println!("r1 == r2 {}", r1 == r2);
-    println!("r1 == r3 {}", r1 == r3);
-    println!("r1 == r4 {}", r1 == v);
+
+#[derive(Debug)]
+enum Action {
+    Get(String),
+    Set(String, Record),
+}
+
+
+fn main() {
+    let mut db: HashMap<String, Record> = HashMap::new();
+
+    loop {
+        let mut user_input = String::new();
+        io::stdin().read_line(&mut user_input).expect("failed to read stdin");
+        let input_vec: Vec<_> = user_input
+            .split_whitespace()
+            .map(|s| s.trim().to_lowercase())
+            .collect::<Vec<_>>();
+
+        let command = &input_vec[0];
+        let params = &input_vec[1..];
+
+        // parse action
+        let action = match command.as_ref() {
+            "get" => Action::Get(params[0].to_string()),
+            "set" => Action::Set(params[0].to_string(),
+                                 make_record(&params[1].to_string())),
+            _ => {
+                println!("invalid command {}", command);
+                continue;
+            }
+        };
+
+        // execute action
+        let result = match action {
+            Action::Get(key) => get(&db, key),
+            Action::Set(key, value) => {
+                db = set(db, key, value);
+                None
+            },
+        };
+
+        // print result
+        match result {
+            None => println!("None"),
+            Some(item) => match item {
+                Record::Str(s) => println!("{}", s),
+                _ => println!("Not implemented"),
+            }
+        }
+    }
 }
