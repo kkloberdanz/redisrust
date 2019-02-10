@@ -144,7 +144,6 @@ fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) {
         return;
     }
 
-    // parse input
     let parsed = parse(&input_vec);
 
     // execute db operations
