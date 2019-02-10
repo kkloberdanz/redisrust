@@ -50,14 +50,18 @@ fn prompt_user(prompt: &String) -> String {
 fn split_command(command: &String) -> Vec<String> {
     let mut vec = Vec::new();
     let mut in_string = false;
+    let mut in_escape_char = false;
     let mut word: String = String::new();
     for c in command.chars() {
-        if c == '"' {
+        if c == '"' && !in_escape_char {
             in_string = !in_string;
+        } else if c == '\\' && !in_escape_char {
+            in_escape_char = true;
         } else if c == ' ' && !in_string {
             vec.push(word);
             word = String::new();
         } else {
+            in_escape_char = false;
             word.push(c);
         }
     }
