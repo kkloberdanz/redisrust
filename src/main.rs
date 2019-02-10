@@ -106,7 +106,7 @@ fn check_input(input_vec: &Vec<String>) -> Result<Action, String> {
         "set" =>
             if length == 3 {
                 Result::Ok(Action::Set(params[0].to_string(),
-                            make_record(&params[1].to_string())))
+                           make_record(&params[1].to_string())))
             } else {
                 Result::Err("expecting: set <key> <value>".to_string())
             }
