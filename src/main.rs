@@ -1,9 +1,18 @@
+#![feature(slice_index_methods)]
+
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
 use std::sync::RwLock;
+use std::net::TcpListener;
+use std::thread;
+use std::io::Read;
+use std::slice::SliceIndex;
 //use std::collections::HashSet;
 //use std::hash::Hash;
+
+
+extern crate threadpool;
 
 
 #[derive(Debug)]
@@ -166,12 +175,48 @@ fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) {
 }
 
 
-fn main() {
-    let db = RwLock::new(HashMap::new());
-    let prompt = String::from("> ");
+fn drop_header(http_msg: &String) -> String {
+    let vec: Vec<&str> = http_msg.split('\n').collect();
+    let last_item = vec.last();
+    match last_item {
+        Some(s) => s.trim().to_string(),
+        None => "".to_string()
+    }
+}
 
-    while let Input::Command(user_input) = prompt_user(&prompt) {
-        evaluate(&user_input, &db);
+
+//fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String, Record>>) {
+fn handle_connection(mut stream: std::net::TcpStream) {
+    let mut buffer = [0; 512];
+    stream.read(&mut buffer);
+    let stream_data = String::from_utf8(buffer.to_vec());
+    match stream_data {
+        Ok(s) => {
+            println!("{}", s);
+            let user_input = drop_header(&s);
+            println!("User input: {}", user_input);
+        },
+        Err(msg) => println!("error: {}", msg),
+    }
+    //evaluate(&user_input);
+}
+
+
+fn main() {
+    //let db = RwLock::new(HashMap::new());
+    //let prompt = String::from("> ");
+
+    //while let Input::Command(user_input) = prompt_user(&prompt) {
+    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+
+    for stream in listener.incoming() {
+        println!("Got connection");
+        let stream = stream.unwrap();
+
+        thread::spawn(move || {
+            //handle_connection(stream, &db);
+            handle_connection(stream);
+        });
     }
 
 }
