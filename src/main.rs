@@ -185,25 +185,26 @@ fn drop_header(http_msg: &String) -> String {
 }
 
 
-//fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String, Record>>) {
-fn handle_connection(mut stream: std::net::TcpStream) {
+fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String, Record>>) {
     let mut buffer = [0; 512];
     stream.read(&mut buffer);
-    let stream_data = String::from_utf8(buffer.to_vec());
+    let buf_as_vec: Vec<u8> = buffer.to_vec();
+    let index_of_null = buf_as_vec.iter().position(|&i| i == 0u8).unwrap();
+    let buf_as_vec = buf_as_vec[..index_of_null].to_vec();
+    let stream_data = String::from_utf8(buf_as_vec);
     match stream_data {
         Ok(s) => {
-            println!("{}", s);
             let user_input = drop_header(&s);
             println!("User input: {}", user_input);
+            evaluate(&user_input, &db);
         },
         Err(msg) => println!("error: {}", msg),
     }
-    //evaluate(&user_input);
 }
 
 
 fn main() {
-    //let db = RwLock::new(HashMap::new());
+    let db = RwLock::new(HashMap::new());
     //let prompt = String::from("> ");
 
     //while let Input::Command(user_input) = prompt_user(&prompt) {
@@ -213,10 +214,14 @@ fn main() {
         println!("Got connection");
         let stream = stream.unwrap();
 
+        handle_connection(stream, &db);
+
+        /*
         thread::spawn(move || {
-            //handle_connection(stream, &db);
-            handle_connection(stream);
+            handle_connection(stream, &db);
+            //handle_connection(stream);
         });
+        */
     }
 
 }
