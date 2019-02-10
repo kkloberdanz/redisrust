@@ -5,6 +5,13 @@ use std::collections::HashMap;
 //use std::hash::Hash;
 
 
+#[derive(Debug)]
+enum Input {
+    Command(String),
+    Quit,
+}
+
+
 #[derive(Eq, PartialEq, Debug, Hash)]
 enum Record {
     Str(String),
@@ -39,12 +46,17 @@ enum Action {
 }
 
 
-fn prompt_user(prompt: &String) -> String {
+fn prompt_user(prompt: &String) -> Input {
     print!("{}", prompt);
     io::stdout().flush().ok().expect("Could not flush stdout");
     let mut user_input = String::new();
     io::stdin().read_line(&mut user_input).expect("failed to read stdin");
-    user_input.trim().to_string()
+    let as_string = user_input.trim().to_string();
+    if as_string == "q" {
+        Input::Quit
+    } else {
+        Input::Command(as_string)
+    }
 }
 
 
@@ -110,18 +122,12 @@ fn main() {
     let mut db: HashMap<String, Record> = HashMap::new();
     let prompt = String::from("> ");
 
-    loop {
-        let user_input = prompt_user(&prompt);
-
-        if user_input == "q" {
-            break;
-        }
+    while let Input::Command(user_input) = prompt_user(&prompt) {
 
         let input_vec: Vec<_> = split_command(&user_input)
             .iter()
             .map(|s| s.trim().to_lowercase())
             .collect::<Vec<_>>();
-
 
         if input_vec.len() == 0 {
             continue;
