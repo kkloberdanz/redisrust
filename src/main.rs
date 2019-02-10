@@ -47,6 +47,27 @@ fn prompt_user(prompt: &String) -> String {
 }
 
 
+fn split_command(command: &String) -> Vec<String> {
+    let mut vec = Vec::new();
+    let mut in_string = false;
+    let mut word: String = String::new();
+    for c in command.chars() {
+        if c == '"' {
+            in_string = !in_string;
+        } else if c == ' ' && !in_string {
+            vec.push(word);
+            word = String::new();
+        } else {
+            word.push(c);
+        }
+    }
+    if word.len() > 0 {
+        vec.push(word);
+    }
+    vec
+}
+
+
 fn main() {
     let mut db: HashMap<String, Record> = HashMap::new();
     let prompt = String::from("> ");
@@ -58,8 +79,8 @@ fn main() {
             break;
         }
 
-        let input_vec: Vec<_> = user_input
-            .split_whitespace()
+        let input_vec: Vec<_> = split_command(&user_input)
+            .iter()
             .map(|s| s.trim().to_lowercase())
             .collect::<Vec<_>>();
 
