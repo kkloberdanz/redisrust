@@ -1,6 +1,7 @@
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
+use std::sync::RwLock;
 //use std::collections::HashSet;
 //use std::hash::Hash;
 
@@ -21,16 +22,31 @@ enum Record {
 }
 
 
-fn set(mut data: HashMap<String, Record>,
-       key: String,
-       value: Record) -> HashMap<String, Record> {
-    data.insert(key, value);
-    data
+impl Clone for Record {
+    fn clone(&self) -> Record {
+        match self {
+            Record::Str(s) => Record::Str(s.clone()),
+            Record::List(l) => Record::List(l.clone())
+        }
+    }
 }
 
 
-fn get(data: &HashMap<String, Record>, key: String) -> Option<&Record> {
-    data.get(&key)
+fn set(db: &RwLock<HashMap<String, Record>>,
+       key: String,
+       value: Record) {
+    let mut writter = db.write().unwrap();
+    writter.insert(key, value);
+}
+
+
+fn get(db: &RwLock<HashMap<String, Record>>, key: &String) -> Option<Record> {
+    let reader = db.read().unwrap();
+    let value = reader.get(key);
+    match value {
+        Some(x) => Some(x.clone()),
+        None => None
+    }
 }
 
 
@@ -119,7 +135,7 @@ fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
 
 
 fn main() {
-    let mut db: HashMap<String, Record> = HashMap::new();
+    let db = RwLock::new(HashMap::new());
     let prompt = String::from("> ");
 
     while let Input::Command(user_input) = prompt_user(&prompt) {
@@ -139,7 +155,7 @@ fn main() {
         // execute db operations
         match parsed {
             Result::Ok(action) => match action {
-                Action::Get(key) => match get(&db, key) {
+                Action::Get(key) => match get(&db, &key) {
                     Some(item) => match item {
                         Record::Str(s) => println!("{}", s),
                         _ => println!("Not implemented"),
@@ -147,7 +163,7 @@ fn main() {
                     None => continue,
                 },
                 Action::Set(key, value) => {
-                    db = set(db, key, value);
+                    set(&db, key, value);
                 },
             },
             Result::Err(msg) =>
