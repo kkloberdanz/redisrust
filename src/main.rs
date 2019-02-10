@@ -134,40 +134,45 @@ fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
 }
 
 
+fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) {
+    let input_vec: Vec<_> = lex(&user_input)
+        .iter()
+        .map(|s| s.trim().to_lowercase())
+        .collect::<Vec<_>>();
+
+    if input_vec.len() == 0 {
+        return;
+    }
+
+    // parse input
+    let parsed = parse(&input_vec);
+
+    // execute db operations
+    match parsed {
+        Result::Ok(action) => match action {
+            Action::Get(key) => match get(&db, &key) {
+                Some(item) => match item {
+                    Record::Str(s) => println!("{}", s),
+                    _ => println!("Not implemented"),
+                },
+                None => return,
+            },
+            Action::Set(key, value) => {
+                set(&db, key, value);
+            },
+        },
+        Result::Err(msg) =>
+            println!("{}", msg),
+    };
+}
+
+
 fn main() {
     let db = RwLock::new(HashMap::new());
     let prompt = String::from("> ");
 
     while let Input::Command(user_input) = prompt_user(&prompt) {
-
-        let input_vec: Vec<_> = lex(&user_input)
-            .iter()
-            .map(|s| s.trim().to_lowercase())
-            .collect::<Vec<_>>();
-
-        if input_vec.len() == 0 {
-            continue;
-        }
-
-        // parse input
-        let parsed = parse(&input_vec);
-
-        // execute db operations
-        match parsed {
-            Result::Ok(action) => match action {
-                Action::Get(key) => match get(&db, &key) {
-                    Some(item) => match item {
-                        Record::Str(s) => println!("{}", s),
-                        _ => println!("Not implemented"),
-                    },
-                    None => continue,
-                },
-                Action::Set(key, value) => {
-                    set(&db, key, value);
-                },
-            },
-            Result::Err(msg) =>
-                println!("{}", msg),
-        };
+        evaluate(&user_input, &db);
     }
+
 }
