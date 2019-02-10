@@ -143,14 +143,14 @@ fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
 }
 
 
-fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) {
+fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) -> String {
     let input_vec: Vec<_> = lex(&user_input)
         .iter()
         .map(|s| s.trim().to_lowercase())
         .collect::<Vec<_>>();
 
     if input_vec.len() == 0 {
-        return;
+        return String::from("");
     }
 
     let parsed = parse(&input_vec);
@@ -160,18 +160,19 @@ fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) {
         Result::Ok(action) => match action {
             Action::Get(key) => match get(&db, &key) {
                 Some(item) => match item {
-                    Record::Str(s) => println!("{}", s),
-                    _ => println!("Not implemented"),
+                    Record::Str(s) => format!("{}", s),
+                    _ => format!("Not implemented"),
                 },
-                None => return,
+                None => String::from(""),
             },
             Action::Set(key, value) => {
                 set(&db, key, value);
+                String::from("Ok")
             },
         },
         Result::Err(msg) =>
-            println!("{}", msg),
-    };
+            format!("{}", msg),
+    }
 }
 
 
@@ -196,7 +197,11 @@ fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String
         Ok(s) => {
             let user_input = drop_header(&s);
             println!("User input: {}", user_input);
-            evaluate(&user_input, &db);
+            let result = evaluate(&user_input, &db);
+            println!("{}", result);
+            let response = format!("HTTP/1.1 200 OK \r\n\r\n{}\r\n", result);
+            stream.write(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
         },
         Err(msg) => println!("error: {}", msg),
     }
