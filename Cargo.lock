@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "redis"
+name = "rustis"
 version = "0.1.0"
 dependencies = [
  "threadpool 1.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
