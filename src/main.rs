@@ -76,7 +76,7 @@ fn prompt_user(prompt: &String) -> Input {
 }
 
 
-fn split_command(command: &String) -> Vec<String> {
+fn lex(command: &String) -> Vec<String> {
     let mut vec = Vec::new();
     let mut in_string = false;
     let mut in_escape_char = false;
@@ -140,7 +140,7 @@ fn main() {
 
     while let Input::Command(user_input) = prompt_user(&prompt) {
 
-        let input_vec: Vec<_> = split_command(&user_input)
+        let input_vec: Vec<_> = lex(&user_input)
             .iter()
             .map(|s| s.trim().to_lowercase())
             .collect::<Vec<_>>();
