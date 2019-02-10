@@ -38,6 +38,7 @@ enum Action {
     Set(String, Record),
 }
 
+
 fn prompt_user(prompt: &String) -> String {
     print!("{}", prompt);
     io::stdout().flush().ok().expect("Could not flush stdout");
@@ -72,6 +73,39 @@ fn split_command(command: &String) -> Vec<String> {
 }
 
 
+fn check_input(input_vec: &Vec<String>) -> Result<Action, String> {
+    let length = input_vec.len();
+
+    if length == 0 {
+        return Result::Err("".to_string())
+    }
+
+    let command = &input_vec[0];
+    let params = &input_vec[1..];
+
+    match command.as_ref() {
+        "get" =>
+            if length == 2 {
+                Result::Ok(Action::Get(params[0].to_string()))
+            } else {
+                Result::Err("expecting: get <key>".to_string())
+            },
+
+        "set" =>
+            if length == 3 {
+                Result::Ok(Action::Set(params[0].to_string(),
+                            make_record(&params[1].to_string())))
+            } else {
+                Result::Err("expecting: set <key> <value>".to_string())
+            }
+
+        _ => {
+            Result::Err(format!("invalid command {}", command))
+        }
+    }
+}
+
+
 fn main() {
     let mut db: HashMap<String, Record> = HashMap::new();
     let prompt = String::from("> ");
@@ -88,55 +122,30 @@ fn main() {
             .map(|s| s.trim().to_lowercase())
             .collect::<Vec<_>>();
 
-        let length = input_vec.len();
 
-        if length == 0 {
+        if input_vec.len() == 0 {
             continue;
         }
-        let command = &input_vec[0];
-        let params = &input_vec[1..];
 
-        // parse action
-        let action = match command.as_ref() {
-            "get" =>
-                if length == 2 {
-                    Action::Get(params[0].to_string())
-                } else {
-                    println!("expecting: get <key>");
-                    continue;
+        // parse response
+        let response = check_input(&input_vec);
+
+        // execute
+        match response {
+            Result::Ok(action) => match action {
+                Action::Get(key) => match get(&db, key) {
+                    Some(item) => match item {
+                        Record::Str(s) => println!("{}", s),
+                        _ => println!("Not implemented"),
+                    },
+                    None => continue,
                 },
-
-            "set" =>
-                if length == 3 {
-                    Action::Set(params[0].to_string(),
-                                make_record(&params[1].to_string()))
-                } else {
-                    println!("expecting: set <key> <value>");
-                    continue;
-                }
-
-            _ => {
-                println!("invalid command {}", command);
-                continue;
-            }
-        };
-
-        // execute action
-        let result = match action {
-            Action::Get(key) => get(&db, key),
-            Action::Set(key, value) => {
-                db = set(db, key, value);
-                None
+                Action::Set(key, value) => {
+                    db = set(db, key, value);
+                },
             },
+            Result::Err(msg) =>
+                println!("{}", msg),
         };
-
-        // print result
-        match result {
-            None => continue,
-            Some(item) => match item {
-                Record::Str(s) => println!("{}", s),
-                _ => println!("Not implemented"),
-            }
-        }
     }
 }
