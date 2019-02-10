@@ -85,7 +85,7 @@ fn split_command(command: &String) -> Vec<String> {
 }
 
 
-fn check_input(input_vec: &Vec<String>) -> Result<Action, String> {
+fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
     let length = input_vec.len();
 
     if length == 0 {
@@ -133,11 +133,11 @@ fn main() {
             continue;
         }
 
-        // parse response
-        let response = check_input(&input_vec);
+        // parse input
+        let parsed = parse(&input_vec);
 
-        // execute
-        match response {
+        // execute db operations
+        match parsed {
             Result::Ok(action) => match action {
                 Action::Get(key) => match get(&db, key) {
                     Some(item) => match item {
