@@ -1,13 +1,15 @@
-#![feature(slice_index_methods)]
-
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
 use std::sync::RwLock;
 use std::net::TcpListener;
 use std::thread;
+use std::time;
 use std::io::Read;
 use std::slice::SliceIndex;
+use std::sync::Arc;
+
+
 //use std::collections::HashSet;
 //use std::hash::Hash;
 
@@ -209,7 +211,7 @@ fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String
 
 
 fn main() {
-    let db = RwLock::new(HashMap::new());
+    let db = Arc::new(RwLock::new(HashMap::new()));
     //let prompt = String::from("> ");
 
     //while let Input::Command(user_input) = prompt_user(&prompt) {
@@ -217,16 +219,12 @@ fn main() {
 
     for stream in listener.incoming() {
         println!("Got connection");
+        let db = Arc::clone(&db);
         let stream = stream.unwrap();
 
-        handle_connection(stream, &db);
-
-        /*
         thread::spawn(move || {
             handle_connection(stream, &db);
-            //handle_connection(stream);
         });
-        */
     }
 
 }
