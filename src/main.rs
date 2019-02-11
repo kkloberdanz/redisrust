@@ -145,7 +145,8 @@ fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
 }
 
 
-fn evaluate(user_input: &String, db: &RwLock<HashMap<String, Record>>) -> String {
+fn evaluate(user_input: &String,
+            db: &RwLock<HashMap<String, Record>>) -> String {
     let input_vec: Vec<_> = lex(&user_input)
         .iter()
         .map(|s| s.trim().to_lowercase())
@@ -188,7 +189,8 @@ fn drop_header(http_msg: &String) -> String {
 }
 
 
-fn handle_connection(mut stream: std::net::TcpStream, db: &RwLock<HashMap<String, Record>>) {
+fn handle_connection(mut stream: std::net::TcpStream,
+                     db: &RwLock<HashMap<String, Record>>) {
     let mut buffer = [0; 512];
     stream.read(&mut buffer);
     let buf_as_vec: Vec<u8> = buffer.to_vec();
