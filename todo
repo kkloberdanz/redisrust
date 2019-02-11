@@ -1,0 +1,6 @@
+(1) Proper response for malformed request
+(2) Add data streams instead of 512 byte buffer
+(3) Use threadpool instead of creating unlimited threads per request
+(4) Add support for List type
+(5) Add support for Set type
+(6) Add support for Map type

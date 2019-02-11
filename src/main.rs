@@ -119,7 +119,7 @@ fn parse(input_vec: &Vec<String>) -> Result<Action, String> {
         return Result::Err("".to_string())
     }
 
-    let command = &input_vec[0];
+    let command = &input_vec[0].to_lowercase();
     let params = &input_vec[1..];
 
     match command.as_ref() {
@@ -149,7 +149,7 @@ fn evaluate(user_input: &String,
             db: &RwLock<HashMap<String, Record>>) -> String {
     let input_vec: Vec<_> = lex(&user_input)
         .iter()
-        .map(|s| s.trim().to_lowercase())
+        .map(|s| s.trim().to_string())
         .collect::<Vec<_>>();
 
     if input_vec.len() == 0 {
